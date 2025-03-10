@@ -42,10 +42,6 @@ Backend/Repository/Migrations/
 # Sqlite database
 Backend/Application/app.db
 
-# AppSettings
-Backend/Application/appsettings.json
-Backend/Application/appsettings.Development.json
-
 # Log file
 Backend/Application/wwwroot/EventLogs/
 Backend/Application/wwwroot/EventLogs/Log.txt

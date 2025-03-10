@@ -1,4 +1,5 @@
 ﻿using Repository;
+using Repository.Dto;
 using Services.Interfaces;
 namespace Services.Application
 {
@@ -10,9 +11,29 @@ namespace Services.Application
             homeData = _homeData;
         }
 
-        public string Test()
+        public async Task<bool> CreateArticle(ArticleDto articleDto)
         {
-            return homeData.Test();
+            return await homeData.CreateArticle(articleDto);
+        }
+
+        public async Task<bool> CreateCategory(CategoryDto categoryDto)
+        {
+            return await homeData.CreateCategory(categoryDto);
+        }
+
+        public async Task<List<ArticleDto>> GetAllArticles()
+        {
+            return await homeData.GetAllArticles();
+        }
+
+        public async Task<CategoryDto> GetCategoryById(int id)
+        {
+            return await homeData.GetCategoryById(id);
+        }
+
+        public async Task<ArticleDto> GetArticleById(int id)
+        {
+            return await homeData.GetArticleById(id);
         }
     }
 }

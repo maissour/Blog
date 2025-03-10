@@ -3,11 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Repository.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Repository.Data
 {
@@ -35,6 +30,14 @@ namespace Repository.Data
 
             builder.Entity<ArticleCategory>()
                    .HasKey(ps => new { ps.ArticleId, ps.CategoryId });
+
+            builder.Entity<Article>()
+                   .HasIndex(x => x.Slug)
+                   .IsUnique();
+
+            builder.Entity<Category>()
+                   .HasIndex(x => x.Slug)
+                   .IsUnique();
 
         }
 
