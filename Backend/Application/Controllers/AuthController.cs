@@ -61,12 +61,21 @@ namespace Application.Controllers
 
             if (result.Succeeded)
             {
-                var user = await userManager.FindByEmailAsync(loginDto.Email);
-                var token = GenerateJwtToken(user,loginDto.RememberMe);
-                return Ok(new { success = true, message = "Login successful", token });
+                var user = await userManager.FindByEmailAsync(User.Identity.Name);
+                if (user == null) return Unauthorized(new { isAuthenticated = false });
+                var role = await userManager.GetRolesAsync(user);
+                return Ok(new 
+                { 
+                    success = true, 
+                    message = "Login successful", 
+                    isAuthenticated = true,
+                    userName = user.FirstName,
+                    role,
+                    roles = User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList(),
+                });
             }
 
-            return BadRequest(new { success = false, errors = "ERROR"});
+            return Unauthorized(new { success = false, errors = "ERROR"});
         }
 
         [HttpGet("logout")]
@@ -76,33 +85,10 @@ namespace Application.Controllers
             return Ok(new { success = true, message = "LogOut successful" });
         }
 
-        private AccessTokenDto GenerateJwtToken(User user, bool rememberMe = false)
+        [HttpGet("forbidden")]
+        public IActionResult Forbidden()
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(configuration["Jwt:Key"]);
-
-            var expires = rememberMe ? DateTime.UtcNow.AddDays(1) : DateTime.UtcNow.AddHours(1);
-            var expiresIn = (int)(expires - DateTime.UtcNow).TotalSeconds;
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new[]
-                {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        }),
-                Expires = expires,
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            var result = new AccessTokenDto
-            {
-                Token = tokenHandler.WriteToken(token),
-                ExpiresIn = expiresIn
-            };
-            return result;
+            return Forbid();
         }
-
     }
 }

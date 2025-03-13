@@ -7,7 +7,6 @@ namespace Application.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class HomeController : ControllerBase
     {
         private readonly IHomeService homeService;
@@ -16,9 +15,11 @@ namespace Application.Controllers
             homeService = _homeService;
         }
 
+        [Authorize]
         [HttpPost("CreateArticle")]
         public async Task<IActionResult> CreateArticle(ArticleDto articleDto)
         {
+            if (!User.Identity.IsAuthenticated) return Unauthorized(new { success = false, message = "login first" });
             if (articleDto == null) return BadRequest(new {success = false, message = "can not create article with empty fields"});
             if (ModelState.IsValid)
             {
@@ -30,9 +31,11 @@ namespace Application.Controllers
             return BadRequest(new { success = false, message = "Invalid Model" });
         }
 
+        [Authorize]
         [HttpPost("CreateCategory")]
         public async Task<IActionResult> CreateCategory(CategoryDto categoryDto)
         {
+            if (!User.Identity.IsAuthenticated) return Unauthorized(new { success = false, message = "login first" });
             if (categoryDto == null) return BadRequest(new { success = false, message = "can not create category with empty fields" });
             if (ModelState.IsValid)
             {
@@ -43,7 +46,7 @@ namespace Application.Controllers
             ModelState.AddModelError("", "Invalid Model");
             return BadRequest(new { success = false, message = "Invalid Model" });
         }
-
+        
         [HttpGet("AllArticle")]
         public async Task<IActionResult> GetAllArticles()
         {

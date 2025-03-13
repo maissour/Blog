@@ -1,5 +1,21 @@
 <script lang="ts">
-export default {}
+import { defineComponent } from 'vue'
+import { useAuthStore } from '@/stores/authStore'
+export default defineComponent({
+  setup() {
+    const authStore = useAuthStore()
+    return {
+      isAuthenticated: authStore.isAuthenticated,
+      userName: authStore.userName,
+      authStore,
+    }
+  },
+  methods: {
+    async logout() {
+      await this.authStore.logout()
+    },
+  },
+})
 </script>
 <template>
   <nav class="navbar navbar-expand-lg bg-body-tertiary shadow shadow-sm fixed-top">
@@ -45,8 +61,12 @@ export default {}
             <a class="nav-link" href="#">Our Bloggers</a>
           </li>
         </ul>
-        <div class="d-flex gap-3">
-          <router-link class="btn btn-success" :to="{ name: 'login' }">Login</router-link>
+        <div class="d-flex gap-3 align-items-center">
+          <router-link class="btn btn-success" v-if="!isAuthenticated" :to="{ name: 'login' }"
+            >Login</router-link
+          >
+          <span v-if="isAuthenticated">{{ userName }}</span>
+          <span class="btn btn-light" v-if="isAuthenticated" @click="logout">Logout</span>
           <!-- <router-link class="btn btn-primary" :to="{ name: 'register' }">Register</router-link> -->
         </div>
       </div>

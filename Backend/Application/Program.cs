@@ -1,8 +1,12 @@
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Repository;
 using Repository.Data;
 using Repository.Models;
@@ -19,32 +23,57 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"], 
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])) 
-        };
-    });
-builder.Services.AddAuthorization();
+// Configure database connection
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     options.UseSqlite(connectionString, b => b.MigrationsAssembly("Repository"));
 });
-builder.Services.AddIdentityApiEndpoints<User>(option => option.SignIn.RequireConfirmedAccount = false)
-                .AddRoles<IdentityRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+
+// Configure Identity with Cookie Authentication
+builder.Services.AddIdentity<User, IdentityRole>(options =>
+{
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+})
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+
+// Configure Cookie settings
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax; // Allow cookies to be sent in cross-origin requests from your frontend
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Use HTTPS
+    options.LoginPath = "/api/Auth/login"; // API endpoint for login
+    options.LogoutPath = "/api/Auth/logout"; // API endpoint for logout
+    options.AccessDeniedPath = "/api/Auth/forbidden"; // Endpoint when access is denied
+    options.SlidingExpiration = true; // Refresh cookie expiration on each request
+});
+
+// Enable authentication and authorization
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie();
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IHomeService, HomeService>();
 builder.Services.AddScoped<HomeRepository>();
+
+var allowSpecificOrigins = "allowSpecificOrigins";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("allowSpecificOrigins",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173") // Replace with your Vue.js frontend URL
+                  .AllowCredentials() // Important for cookies!
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
+});
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
@@ -92,9 +121,10 @@ using (var scope = app.Services.CreateScope())
     }
 };
 app.UseHttpsRedirection();
-
+//app.MapIdentityApi<User>();
 app.UseRouting();
 app.UseAuthentication();
+app.UseCors(allowSpecificOrigins);
 app.UseAuthorization();
 
 app.MapControllers();
