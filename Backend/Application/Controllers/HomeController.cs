@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Domain.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Repository.Dto;
 using Services.Interfaces;
@@ -53,6 +54,14 @@ namespace Application.Controllers
             var articles = await homeService.GetAllArticles();
             if (articles == null) return BadRequest(new { success = false, message = "No article found" });
             return Ok(new { success = true, message = "articles fetched successfully", result = articles });
+        }
+
+        [HttpGet("ArticleById/{id}")]
+        public async Task<IActionResult> GetArticleById(int id)
+        {
+            var article = await homeService.GetArticleById(id);
+            if (article == null) return BadRequest(new { success = false, message = "No article found" });
+            return Ok(new { success = true, message = "article fetched successfully", result = article });
         }
     }
 }
