@@ -63,5 +63,13 @@ namespace Application.Controllers
             if (article == null) return BadRequest(new { success = false, message = "No article found" });
             return Ok(new { success = true, message = "article fetched successfully", result = article });
         }
+
+        [HttpGet("RecentArticle")]
+        public async Task<IActionResult> GetRecentArticles()
+        {
+            var articles = await homeService.GetTopFiveRecentArticle();
+            if (articles == null) return BadRequest(new { success = false, message = "No article found" });
+            return Ok(new { success = true, message = "articles fetched successfully", result = articles });
+        }
     }
 }

@@ -35,5 +35,10 @@ namespace Services.Application
         {
             return await homeData.GetArticleById(id);
         }
+
+        public async Task<List<ArticleDto>> GetTopFiveRecentArticle()
+        {
+            return await homeData.GetTopFiveRecentArticle();
+        }
     }
 }

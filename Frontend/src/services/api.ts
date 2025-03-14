@@ -9,6 +9,9 @@ export default {
     getArticleById(id: number) {
         return instance.get(`/Home/ArticleById/${id}`)
     },
+    getRecentArticles() {
+        return instance.get("/Home/RecentArticle")
+    },
     //Login
     async login(loginData: LoginDto) {
         return await instance.post("/Auth/login", loginData)

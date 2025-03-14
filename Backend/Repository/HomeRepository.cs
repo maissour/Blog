@@ -1,4 +1,5 @@
 ﻿
+using Domain.Constants;
 using Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -127,6 +128,38 @@ namespace Repository
                     Slug = x.Category.Slug
                 }).ToList()
             };
+            return model;
+        }
+
+        public async Task<List<ArticleDto>> GetTopFiveRecentArticle()
+        {
+            var articles = await context.Articles
+                                        .Include(x => x.ArticleCategories)
+                                        .ThenInclude(x => x.Category)
+                                        .OrderByDescending(x => x.Id)
+                                        .Take(GeneralConstants.RecentArticle)
+                                        .ToListAsync();
+            if (articles.IsNullOrEmpty()) return null;
+            var model = new List<ArticleDto>();
+            foreach (var item in articles)
+            {
+                model.Add(new ArticleDto
+                {
+                    Id = item.Id,
+                    Title = item.Title,
+                    Slug = item.Slug,
+                    Description = item.Description,
+                    Text = item.Text,
+                    Image = item.Image,
+                    VideoUrl = item.VideoUrl,
+                    Categories = item.ArticleCategories.Select(x => new CategoryDto
+                    {
+                        Id = x.Category.Id,
+                        Name = x.Category.Name,
+                        Slug = x.Category.Slug
+                    }).ToList()
+                });
+            }
             return model;
         }
     }

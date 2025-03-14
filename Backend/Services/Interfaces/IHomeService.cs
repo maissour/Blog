@@ -10,5 +10,6 @@ namespace Services.Interfaces
         Task<List<ArticleDto>> GetAllArticles();
         Task<CategoryDto> GetCategoryById(int id);
         Task<ArticleDto> GetArticleById(int id);
+        Task<List<ArticleDto>> GetTopFiveRecentArticle();
     }
 }
